@@ -84,8 +84,13 @@ spec:
             name: {{ include "prometheus.fullname" . }}
         - name: storage-volume
           {{- if .Values.persistence.enabled }}
+          {{- if .Values.persistence.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ include "prometheus.fullname" . }}
+          {{- end }}
           {{- else }}
           emptyDir: {}
           {{- end }}
