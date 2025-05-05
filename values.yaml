@@ -1,0 +1,63 @@
+# Default values for prometheus.
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+namespace: emso-monitor
+
+image:
+  repository: prom/prometheus
+  pullPolicy: IfNotPresent
+  tag: v2.51.1
+
+reloaderImage:
+  repository: ghcr.io/prometheus-operator/prometheus-config-reloader
+  pullPolicy: IfNotPresent
+  tag: v0.72.0
+
+service:
+  type: ClusterIP
+  port: 9090
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+podAnnotations:
+  sidecar.istio.io/inject: "false"
+
+rbac:
+  create: true
+
+configMap:
+  alertingRules:
+    groups:
+      - name: Rules
+        rules:
+          - alert: "(POD) Cảnh báo RAM"
+            expr: 'sum by (pod, namespace) (sum by (container, pod, namespace) (container_memory_usage_bytes{container!~"elasticsearch", namespace=~".+"}) / sum by (container, pod, namespace) (kube_pod_container_resource_limits{namespace=~".+", resource="memory"}) * 100 > 50 or sum by (container, pod, namespace) (container_memory_usage_bytes{container="elasticsearch", namespace=~".+"}) / sum by (container, pod, namespace) (kube_pod_container_resource_limits{namespace=~".+", resource="memory"}) * 100 > 80 or sum by (pod, namespace) ( rate(container_cpu_usage_seconds_total{namespace=~".+"}[1m])) * 100000 / (sum(container_spec_cpu_quota{namespace=~".+"}) by (pod, namespace)) > 0.5)'
+            labels:
+              severity: Khẩn cấp
+              app_type: Cluster Application 01
+              category: kubernetes
+              instance: "{{ $labels.pod }}"
+            annotations:
+              summary: "Tài nguyên tăng"
+              description: "cảnh báo"
+
+persistence:
+  enabled: false
+  # storageClass: "-"
+  # size: 8Gi
