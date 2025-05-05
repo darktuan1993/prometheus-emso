@@ -24,8 +24,9 @@ reloaderImage:
   tag: v0.72.0
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 9090
+  nodePort: 30900
 
 resources: {}
   # limits:
