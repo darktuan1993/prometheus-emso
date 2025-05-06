@@ -7,7 +7,7 @@ serviceAccount:
   annotations: {}
   name: ""
 
-namespace: test-monitor
+namespace: emso-monitoring
 
 image:
   repository: prom/prometheus
