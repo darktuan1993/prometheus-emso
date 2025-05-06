@@ -12,7 +12,7 @@ namespace: test-monitor
 image:
   repository: prom/prometheus
   pullPolicy: IfNotPresent
-  tag: v2.51.1
+  tag: v3.3.0
 
 reloaderImage:
   repository: ghcr.io/prometheus-operator/prometheus-config-reloader

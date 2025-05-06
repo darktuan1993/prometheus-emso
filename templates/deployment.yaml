@@ -40,7 +40,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           args:
-            - --storage.tsdb.retention.time=7d
+            - "--storage.tsdb.retention.time=5d"
+            - "--storage.tsdb.retention.size=30GB"
             - --config.file=/etc/config/prometheus.yml
             - --storage.tsdb.path=/data
             - --web.console.libraries=/etc/prometheus/console_libraries
