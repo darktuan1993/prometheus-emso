@@ -28,14 +28,6 @@ data:
       evaluation_interval: 1m
       scrape_interval: 1m
       scrape_timeout: 30m
-    alerting:
-      alertmanagers:
-        - scheme: http
-          static_configs:
-            - targets: ["172.16.0.225:32801"]
-          basic_auth:
-            username: admin
-            password: Emso@Uddnfk2334
     rule_files:
     - /etc/config/recording_rules.yml
     - /etc/config/alerting_rules.yml
