@@ -54,6 +54,56 @@ configMap:
               summary: "Tài nguyên tăng"
               description: "cảnh báo"
 
+          - alert: Node Không Sẵn Sàng
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 10m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Node Kubernetes không sẵn sàng (máy chủ: {{ $labels.node }})"
+              description: >
+                Node {{ $labels.node }} đã không ở trạng thái sẵn sàng trong ít nhất 10 phút.
+                Có thể node đã bị lỗi, mất kết nối, hoặc đang bị quá tải.
+
+                🔎 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+                📅 Thời gian: {{ $value | humanizeTimestamp }}
+
+          - alert: Node bị DiskPressure
+            expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "⚠️ Node Kubernetes đang đầy đĩa ({{ $labels.instance }})"
+              description: >
+                Node {{ $labels.node }} đang ở trạng thái *DiskPressure*, tức là hệ thống phát hiện ổ đĩa gần đầy hoặc không còn đủ dung lượng để hoạt động ổn định.
+
+                ⏱️ Tình trạng kéo dài ít nhất 2 phút.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+                📅 Thời gian: {{ $value | humanizeTimestamp }}
+
+          - alert: Container bị OOMKilled
+            expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1)
+              and ignoring (reason)
+              min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: "⚠️ Container bị thiếu bộ nhớ (OOMKilled)"
+              description: >
+                Container `{{ $labels.container }}` trong pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã bị hệ thống dừng do vượt quá giới hạn bộ nhớ (OOMKilled) ít nhất 1 lần trong 10 phút gần đây.
+
+                🔁 Số lần restart tăng lên trong khoảng thời gian đó.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+                📅 Thời gian: {{ $value | humanizeTimestamp }}
+
+
 persistence:
   enabled: false
   # storageClass: "-"
