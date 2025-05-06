@@ -8,7 +8,7 @@ serviceAccount:
   name: ""
 
 namespace: emso-monitoring
-nodeName: cluster-sn-ng-ingres-bazxvbzp64mx-node-0
+# nodeName: cluster-sn-ng-ingres-bazxvbzp64mx-node-0
 image:
   repository: prom/prometheus
   pullPolicy: IfNotPresent
