@@ -204,7 +204,7 @@ configMap:
                 🏷️ Nhãn: {{ $labels }}
 
           - alert: POD không ở trạng thái hoạt động bình thường
-            expr: sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
+            expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
             for: 15m
             labels:
               severity: critical
