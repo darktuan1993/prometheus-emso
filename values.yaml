@@ -103,6 +103,118 @@ configMap:
                 🏷️ Nhãn: {{ $labels }}
                 📅 Thời gian: {{ $value | humanizeTimestamp }}
 
+          - alert: PVC Đang chờ được cấp phát
+            expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "⚠️ PVC đang chờ được cấp phát (Pending)"
+              description: >
+                PersistentVolumeClaim `{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}` đã ở trạng thái *Pending* trong hơn 2 phút.
+
+                📦 Điều này có thể khiến Pod không thể khởi động do thiếu storage.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+
+          - alert: Volume Gần đầy dung lượng
+            expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "⚠️ Volume gần đầy dung lượng (còn dưới 10%)"
+              description: >
+                Một volume đang gần đầy – chỉ còn dưới 10% dung lượng khả dụng.
+
+                Điều này có thể gây lỗi ghi dữ liệu, crash ứng dụng hoặc dừng Pod nếu vượt quá giới hạn.
+
+                📊 Giá trị: {{ $value }}%
+                🏷️ Nhãn: {{ $labels }}
+
+          - alert: StatefulSet không đủ Pod
+            expr: kube_statefulset_replicas - kube_statefulset_status_replicas_ready > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "❗ StatefulSet không đủ Pod ({{ $labels.namespace }}/{{ $labels.statefulset }})"
+              description: >
+                StatefulSet `{{ $labels.namespace }}/{{ $labels.statefulset }}` đang có số lượng Pod sẵn sàng **ít hơn** so với kỳ vọng.
+
+                📦 Số Pod cần: `kube_statefulset_replicas`
+                ✅ Số Pod sẵn sàng: `kube_statefulset_status_replicas_ready`
+
+                Có thể do lỗi container, node thiếu tài nguyên, hoặc PVC gặp sự cố.
+
+                🔢 VALUE: {{ $value }}
+                🏷️ LABELS: {{ $labels }}
+
+          - alert: HPA không thể scale thêm
+            expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
+                  * on (horizontalpodautoscaler,namespace)
+                  (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "⚠️ HPA không thể scale thêm ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
+              description: >
+                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đang ở trạng thái *ScalingLimited*, tức là không thể mở rộng thêm số Pod dù có nhu cầu.
+
+                Có thể do đã đạt đến giới hạn `maxReplicas`, tài nguyên cluster không đủ, hoặc Pod không khởi động được.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+
+          - alert: HPA đã đạt đến giới hạn tối đa số Pod
+            expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
+                  and (kube_horizontalpodautoscaler_spec_max_replicas > 1)
+                  and (kube_horizontalpodautoscaler_spec_min_replicas != kube_horizontalpodautoscaler_spec_max_replicas)
+            for: 2m
+            labels:
+              severity: info
+            annotations:
+              summary: "ℹ️ HPA đã đạt đến giới hạn tối đa số Pod"
+              description: >
+                HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã scale đến số Pod tối đa được cấu hình (`maxReplicas`).
+
+                👉 Điều này có thể cho thấy workload đang cần nhiều tài nguyên hơn, hoặc bạn nên cân nhắc nâng `maxReplicas`.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+
+          - alert: HPA đủ tài nguyên
+            expr: max(
+                    quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
+                    == kube_horizontalpodautoscaler_spec_min_replicas
+                  ) by (horizontalpodautoscaler) > 3
+            for: 0m
+            labels:
+              severity: info
+            annotations:
+              summary: "ℹ️ HPA sử dụng thấp – có thể dư tài nguyên"
+              description: >
+                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã hoạt động ở mức tối thiểu (`minReplicas`) trong **ít nhất 50% thời gian của 1 ngày qua**.
+
+                👉 Điều này có thể cho thấy ứng dụng đang được phân bổ tài nguyên dư thừa. Cân nhắc giảm số lượng replica hoặc tiết kiệm chi phí.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
+
+          - alert: POD không ở trạng thái hoạt động bình thường
+            expr: sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
+            for: 15m
+            labels:
+              severity: critical
+            annotations:
+              summary: "❗ Pod không ở trạng thái hoạt động bình thường"
+              description: >
+                Pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút.
+
+                📊 Giá trị: {{ $value }}
+                🏷️ Nhãn: {{ $labels }}
 
 persistence:
   enabled: false
