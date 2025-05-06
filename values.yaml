@@ -12,7 +12,7 @@ namespace: emso-monitoring
 image:
   repository: prom/prometheus
   pullPolicy: IfNotPresent
-  tag: v3.3.0
+  tag: v2.51.1
 
 reloaderImage:
   repository: ghcr.io/prometheus-operator/prometheus-config-reloader
