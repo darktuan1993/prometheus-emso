@@ -387,17 +387,17 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: TaiNguyenCpuSuDungThap
-            expr: (min by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1h]))) > 0.8
-            for: 1w
-            labels:
-              severity: info
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} sử dụng CPU quá thấp trong 1 tuần"
-              description: >
-                CPU của máy chủ {{ $labels.instance }} hoạt động dưới 20% trong suốt 1 tuần qua. Bạn có thể cân nhắc giảm số lượng CPU hoặc phân bổ tài nguyên hiệu quả hơn.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+          # - alert: TaiNguyenCpuSuDungThap
+          #   expr: (min by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1h]))) > 0.8
+          #   for: 1w
+          #   labels:
+          #     severity: info
+          #   annotations:
+          #     summary: "Máy chủ {{ $labels.instance }} sử dụng CPU quá thấp trong 1 tuần"
+          #     description: >
+          #       CPU của máy chủ {{ $labels.instance }} hoạt động dưới 20% trong suốt 1 tuần qua. Bạn có thể cân nhắc giảm số lượng CPU hoặc phân bổ tài nguyên hiệu quả hơn.
+          #       ▸ Giá trị hiện tại: {{ $value }}
+          #       ▸ Thông tin nhãn: {{ $labels }}
 
           - alert: VMBiAnhHuongBoiNoisyNeighbor
             expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
@@ -534,7 +534,7 @@ configMap:
                 ▸ Thông tin nhãn: {{ $labels }}
 
           - alert: STATUS SERVER
-            expr: up == 0
+            expr: up{job='kubernetes-nodes'} == 0
             for: 2m
             labels:
               severity: critical
