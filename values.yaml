@@ -44,7 +44,7 @@ configMap:
       - name: Rules
         rules:
           - alert: "(POD) Cảnh báo RAM"
-            expr: 'sum by (pod, namespace) (sum by (container, pod, namespace) (container_memory_usage_bytes{container!~"elasticsearch", namespace=~".+"}) / sum by (container, pod, namespace) (kube_pod_container_resource_limits{namespace=~".+", resource="memory"}) * 100 > 50 or sum by (container, pod, namespace) (container_memory_usage_bytes{container="elasticsearch", namespace=~".+"}) / sum by (container, pod, namespace) (kube_pod_container_resource_limits{namespace=~".+", resource="memory"}) * 100 > 80 or sum by (pod, namespace) ( rate(container_cpu_usage_seconds_total{namespace=~".+"}[1m])) * 100000 / (sum(container_spec_cpu_quota{namespace=~".+"}) by (pod, namespace)) > 0.5)'
+            expr: 'sum by (job,container,namespace,pod) ((sum by (container, pod, namespace) (container_memory_usage_bytes{container!~"elasticsearch", namespace=~".+"})/sum by (container, pod, namespace) (kube_pod_container_resource_limits{resource="memory", namespace=~".+"}))* on (namespace, pod) group_left(job) kube_pod_info) * 100 > 90'
             labels:
               severity: Khẩn cấp
               app_type: Application
