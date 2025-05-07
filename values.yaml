@@ -533,6 +533,15 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }} giây
                 ▸ Thông tin nhãn: {{ $labels }}
 
+          - alert: STATUS SERVER
+            expr: up == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Máy chủ {{ $labels.instance }} bị tắt"
+              description: "Hệ thống phát hiện máy chủ {{ $labels.instance }} đã ngừng phản hồi trong hơn 2 phút. Vui lòng kiểm tra tình trạng kết nối hoặc dịch vụ."
+
 persistence:
   enabled: false
   # storageClass: "-"
