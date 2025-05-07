@@ -26,10 +26,10 @@ service:
 
 resources: {}
   # limits:
-  #   cpu: 100m
+  #   cpu: 105m
   #   memory: 128Mi
   # requests:
-  #   cpu: 100m
+  #   cpu: 105m
   #   memory: 128Mi
 
 podAnnotations:
@@ -56,7 +56,7 @@ configMap:
 
           - alert: Node Không Sẵn Sàng
             expr: kube_node_status_condition{condition="Ready",status="true"} == 0
-            for: 10m
+            for: 15m
             labels:
               severity: critical
             annotations:
@@ -86,10 +86,10 @@ configMap:
                 📅 Thời gian: {{ $value | humanizeTimestamp }}
 
           - alert: Container bị OOMKilled
-            expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 10m >= 1)
+            expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 15m >= 1)
               and ignoring (reason)
-              min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[10m]) == 1
-            for: 0m
+              min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[15m]) == 1
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -190,7 +190,7 @@ configMap:
                     quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
                     == kube_horizontalpodautoscaler_spec_min_replicas
                   ) by (horizontalpodautoscaler) > 3
-            for: 0m
+            for: 5m
             labels:
               severity: info
             annotations:
@@ -203,13 +203,13 @@ configMap:
                 📊 Giá trị: {{ $value }}
                 🏷️ Nhãn: {{ $labels }}
 
-          - alert: POD không ở trạng thái hoạt động bình thường
+          - alert: POD Lỗi
             expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
             for: 15m
             labels:
               severity: critical
             annotations:
-              summary: "❗ Pod không ở trạng thái hoạt động bình thường"
+              summary: "❗đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút"
               description: >
                 Pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút.
 
@@ -218,7 +218,7 @@ configMap:
 
           - alert: HostOutOfMemory
             expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.10
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -230,7 +230,7 @@ configMap:
 
           - alert: HostMemoryUnderMemoryPressure
             expr: rate(node_vmstat_pgmajfault[5m]) > 1000
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -243,7 +243,7 @@ configMap:
 
           - alert: HostMemoryIsUnderutilized
             expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
-            for: 0m
+            for: 5m
             labels:
               severity: info
             annotations:
@@ -256,7 +256,7 @@ configMap:
 
           - alert: BoNhoMayChuSuDungThap
             expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
-            for: 0m
+            for: 5m
             labels:
               severity: info
             annotations:
@@ -268,7 +268,7 @@ configMap:
 
           - alert: LuuLuongMangVaoBatThuong
             expr: ((rate(node_network_receive_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80)
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -280,7 +280,7 @@ configMap:
 
           - alert: LuuLuongMangRaBatThuong
             expr: (rate(node_network_transmit_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -292,7 +292,7 @@ configMap:
 
           - alert: TocDoDocDiaBatThuong
             expr: rate(node_disk_io_time_seconds_total[5m]) > 0.80
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -359,7 +359,7 @@ configMap:
             annotations:
               summary: "Máy chủ {{ $labels.instance }} có độ trễ đọc đĩa bất thường"
               description: >
-                Độ trễ trung bình của các thao tác đọc trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 100ms. Đây có thể là dấu hiệu của ổ đĩa sắp hỏng hoặc bị quá tải I/O.
+                Độ trễ trung bình của các thao tác đọc trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu của ổ đĩa sắp hỏng hoặc bị quá tải I/O.
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
@@ -371,13 +371,13 @@ configMap:
             annotations:
               summary: "Máy chủ {{ $labels.instance }} có độ trễ ghi đĩa bất thường"
               description: >
-                Độ trễ trung bình của các thao tác ghi dữ liệu trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 100ms. Đây có thể là dấu hiệu ổ đĩa đang bị quá tải, có lỗi phần cứng hoặc I/O bottleneck.
+                Độ trễ trung bình của các thao tác ghi dữ liệu trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu ổ đĩa đang bị quá tải, có lỗi phần cứng hoặc I/O bottleneck.
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
           - alert: TaiCPUTrenMayChuCao
             expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m])) > 0.80
-            for: 10m
+            for: 15m
             labels:
               severity: warning
             annotations:
@@ -401,7 +401,7 @@ configMap:
 
           - alert: VMBiAnhHuongBoiNoisyNeighbor
             expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -413,7 +413,7 @@ configMap:
 
           - alert: CpuIowaitCao
             expr: avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > 0.10
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -439,7 +439,7 @@ configMap:
             expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
                   /
                   (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -463,7 +463,7 @@ configMap:
 
           - alert: DichVuSystemdBiLoi
             expr: node_systemd_unit_state{state="failed"} == 1
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -475,7 +475,7 @@ configMap:
 
           - alert: ThayDoiPhienBanKernel
             expr: changes(node_uname_info[1h]) > 0
-            for: 0m
+            for: 5m
             labels:
               severity: info
             annotations:
@@ -487,7 +487,7 @@ configMap:
 
           - alert: PhatHienTienTrinhBiOomKill
             expr: increase(node_vmstat_oom_kill[1m]) > 0
-            for: 0m
+            for: 5m
             labels:
               severity: warning
             annotations:
