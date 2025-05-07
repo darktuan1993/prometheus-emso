@@ -222,7 +222,7 @@ configMap:
             labels:
               severity: warning
             annotations:
-              summary: "Máy chủ {{ $labels.instance }} sắp hết bộ nhớ"
+              summary: "Máy chủ {{ $labels.instance }} sắp hết bộ nhớ  ▸ Giá trị hiện tại: {{ $value }}"
               description: >
                 Bộ nhớ khả dụng của máy chủ {{ $labels.instance }} còn dưới 10%. Hệ thống có thể gặp lỗi do thiếu RAM.
                 ▸ Giá trị hiện tại: {{ $value }}
