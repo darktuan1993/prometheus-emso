@@ -65,9 +65,9 @@ configMap:
                 Node {{ $labels.node }} đã không ở trạng thái sẵn sàng trong ít nhất 10 phút.
                 Có thể node đã bị lỗi, mất kết nối, hoặc đang bị quá tải.
 
-                🔎 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
-                📅 Thời gian: {{ $value | humanizeTimestamp }}
+                 Giá trị: {{ $value }}
+                 Nhãn: {{ $labels }}
+                 Thời gian: {{ $value | humanizeTimestamp }}
 
           - alert: Node bị DiskPressure
             expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
@@ -79,11 +79,11 @@ configMap:
               description: >
                 Node {{ $labels.node }} đang ở trạng thái *DiskPressure*, tức là hệ thống phát hiện ổ đĩa gần đầy hoặc không còn đủ dung lượng để hoạt động ổn định.
 
-                ⏱️ Tình trạng kéo dài ít nhất 2 phút.
+                Tình trạng kéo dài ít nhất 2 phút.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
-                📅 Thời gian: {{ $value | humanizeTimestamp }}
+                Giá trị: {{ $value }}
+                Nhãn: {{ $labels }}
+                Thời gian: {{ $value | humanizeTimestamp }}
 
           - alert: Container bị OOMKilled
             expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 15m >= 1)
@@ -97,11 +97,11 @@ configMap:
               description: >
                 Container `{{ $labels.container }}` trong pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã bị hệ thống dừng do vượt quá giới hạn bộ nhớ (OOMKilled) ít nhất 1 lần trong 10 phút gần đây.
 
-                🔁 Số lần restart tăng lên trong khoảng thời gian đó.
+                Số lần restart tăng lên trong khoảng thời gian đó.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
-                📅 Thời gian: {{ $value | humanizeTimestamp }}
+                Giá trị: {{ $value }}
+                Nhãn: {{ $labels }}
+                Thời gian: {{ $value | humanizeTimestamp }}
 
           - alert: PVC Đang chờ được cấp phát
             expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
@@ -113,10 +113,10 @@ configMap:
               description: >
                 PersistentVolumeClaim `{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}` đã ở trạng thái *Pending* trong hơn 2 phút.
 
-                📦 Điều này có thể khiến Pod không thể khởi động do thiếu storage.
+                Điều này có thể khiến Pod không thể khởi động do thiếu storage.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+                Giá trị: {{ $value }}
+                Nhãn: {{ $labels }}
 
           - alert: Volume Gần đầy dung lượng
             expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
@@ -130,8 +130,8 @@ configMap:
 
                 Điều này có thể gây lỗi ghi dữ liệu, crash ứng dụng hoặc dừng Pod nếu vượt quá giới hạn.
 
-                📊 Giá trị: {{ $value }}%
-                🏷️ Nhãn: {{ $labels }}
+                Giá trị: {{ $value }}%
+                Nhãn: {{ $labels }}
 
           - alert: StatefulSet không đủ Pod
             expr: kube_statefulset_replicas - kube_statefulset_status_replicas_ready > 0
@@ -143,13 +143,13 @@ configMap:
               description: >
                 StatefulSet `{{ $labels.namespace }}/{{ $labels.statefulset }}` đang có số lượng Pod sẵn sàng **ít hơn** so với kỳ vọng.
 
-                📦 Số Pod cần: `kube_statefulset_replicas`
-                ✅ Số Pod sẵn sàng: `kube_statefulset_status_replicas_ready`
+                Số Pod cần: `kube_statefulset_replicas`
+                Số Pod sẵn sàng: `kube_statefulset_status_replicas_ready`
 
                 Có thể do lỗi container, node thiếu tài nguyên, hoặc PVC gặp sự cố.
 
-                🔢 VALUE: {{ $value }}
-                🏷️ LABELS: {{ $labels }}
+                VALUE: {{ $value }}
+                LABELS: {{ $labels }}
 
           - alert: HPA không thể scale thêm
             expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
@@ -165,8 +165,8 @@ configMap:
 
                 Có thể do đã đạt đến giới hạn `maxReplicas`, tài nguyên cluster không đủ, hoặc Pod không khởi động được.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+                Giá trị: {{ $value }}
+                Nhãn: {{ $labels }}
 
           - alert: HPA đã đạt đến giới hạn tối đa số Pod
             expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
