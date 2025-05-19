@@ -41,505 +41,505 @@ rbac:
 configMap:
   alertingRules:
     groups:
-      - name: Rules
-        rules:
-          - alert: "(POD) Cảnh báo RAM"
-            expr: 'sum by (job,container,namespace,pod) ((sum by (container, pod, namespace) (container_memory_usage_bytes{container!~"elasticsearch", namespace=~".+"})/sum by (container, pod, namespace) (kube_pod_container_resource_limits{resource="memory", namespace=~".+"}))* on (namespace, pod) group_left(job) kube_pod_info) * 100 > 90'
-            labels:
-              severity: Khẩn cấp
-              app_type: Application
-              category: kubernetes
-              instance: "{{ $labels.pod }}"
-            annotations:
-              summary: "Tài nguyên tăng"
-              description: "cảnh báo"
+      # - name: Rules
+      #   rules:
+      #     - alert: "(POD) Cảnh báo RAM"
+      #       expr: 'sum by (job,container,namespace,pod) ((sum by (container, pod, namespace) (container_memory_usage_bytes{container!~"elasticsearch", namespace=~".+"})/sum by (container, pod, namespace) (kube_pod_container_resource_limits{resource="memory", namespace=~".+"}))* on (namespace, pod) group_left(job) kube_pod_info) * 100 > 90'
+      #       labels:
+      #         severity: Khẩn cấp
+      #         app_type: Application
+      #         category: kubernetes
+      #         instance: "{{ $labels.pod }}"
+      #       annotations:
+      #         summary: "Tài nguyên tăng"
+      #         description: "cảnh báo"
 
-          - alert: Node Không Sẵn Sàng
-            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
-            for: 15m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Node Kubernetes không sẵn sàng (máy chủ: {{ $labels.node }})"
-              description: >
-                Node {{ $labels.node }} đã không ở trạng thái sẵn sàng trong ít nhất 10 phút.
-                Có thể node đã bị lỗi, mất kết nối, hoặc đang bị quá tải.
+      #     - alert: Node Không Sẵn Sàng
+      #       expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+      #       for: 15m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Node Kubernetes không sẵn sàng (máy chủ: {{ $labels.node }})"
+      #         description: >
+      #           Node {{ $labels.node }} đã không ở trạng thái sẵn sàng trong ít nhất 10 phút.
+      #           Có thể node đã bị lỗi, mất kết nối, hoặc đang bị quá tải.
 
-                 Giá trị: {{ $value }}
-                 Nhãn: {{ $labels }}
-                 Thời gian: {{ $value | humanizeTimestamp }}
+      #            Giá trị: {{ $value }}
+      #            Nhãn: {{ $labels }}
+      #            Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: Node bị DiskPressure
-            expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "⚠️ Node Kubernetes đang đầy đĩa ({{ $labels.instance }})"
-              description: >
-                Node {{ $labels.node }} đang ở trạng thái *DiskPressure*, tức là hệ thống phát hiện ổ đĩa gần đầy hoặc không còn đủ dung lượng để hoạt động ổn định.
+      #     - alert: Node bị DiskPressure
+      #       expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "⚠️ Node Kubernetes đang đầy đĩa ({{ $labels.instance }})"
+      #         description: >
+      #           Node {{ $labels.node }} đang ở trạng thái *DiskPressure*, tức là hệ thống phát hiện ổ đĩa gần đầy hoặc không còn đủ dung lượng để hoạt động ổn định.
 
-                Tình trạng kéo dài ít nhất 2 phút.
+      #           Tình trạng kéo dài ít nhất 2 phút.
 
-                Giá trị: {{ $value }}
-                Nhãn: {{ $labels }}
-                Thời gian: {{ $value | humanizeTimestamp }}
+      #           Giá trị: {{ $value }}
+      #           Nhãn: {{ $labels }}
+      #           Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: Container bị OOMKilled
-            expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 15m >= 1)
-              and ignoring (reason)
-              min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[15m]) == 1
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "⚠️ Container bị thiếu bộ nhớ (OOMKilled)"
-              description: >
-                Container `{{ $labels.container }}` trong pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã bị hệ thống dừng do vượt quá giới hạn bộ nhớ (OOMKilled) ít nhất 1 lần trong 10 phút gần đây.
+      #     - alert: Container bị OOMKilled
+      #       expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 15m >= 1)
+      #         and ignoring (reason)
+      #         min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[15m]) == 1
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "⚠️ Container bị thiếu bộ nhớ (OOMKilled)"
+      #         description: >
+      #           Container `{{ $labels.container }}` trong pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã bị hệ thống dừng do vượt quá giới hạn bộ nhớ (OOMKilled) ít nhất 1 lần trong 10 phút gần đây.
 
-                Số lần restart tăng lên trong khoảng thời gian đó.
+      #           Số lần restart tăng lên trong khoảng thời gian đó.
 
-                Giá trị: {{ $value }}
-                Nhãn: {{ $labels }}
-                Thời gian: {{ $value | humanizeTimestamp }}
+      #           Giá trị: {{ $value }}
+      #           Nhãn: {{ $labels }}
+      #           Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: PVC Đang chờ được cấp phát
-            expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "⚠️ PVC đang chờ được cấp phát (Pending)"
-              description: >
-                PersistentVolumeClaim `{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}` đã ở trạng thái *Pending* trong hơn 2 phút.
+      #     - alert: PVC Đang chờ được cấp phát
+      #       expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "⚠️ PVC đang chờ được cấp phát (Pending)"
+      #         description: >
+      #           PersistentVolumeClaim `{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}` đã ở trạng thái *Pending* trong hơn 2 phút.
 
-                Điều này có thể khiến Pod không thể khởi động do thiếu storage.
+      #           Điều này có thể khiến Pod không thể khởi động do thiếu storage.
 
-                Giá trị: {{ $value }}
-                Nhãn: {{ $labels }}
+      #           Giá trị: {{ $value }}
+      #           Nhãn: {{ $labels }}
 
-          - alert: Volume Gần đầy dung lượng
-            expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "⚠️ Volume gần đầy dung lượng (còn dưới 10%)"
-              description: >
-                Một volume đang gần đầy – chỉ còn dưới 10% dung lượng khả dụng.
+      #     - alert: Volume Gần đầy dung lượng
+      #       expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "⚠️ Volume gần đầy dung lượng (còn dưới 10%)"
+      #         description: >
+      #           Một volume đang gần đầy – chỉ còn dưới 10% dung lượng khả dụng.
 
-                Điều này có thể gây lỗi ghi dữ liệu, crash ứng dụng hoặc dừng Pod nếu vượt quá giới hạn.
+      #           Điều này có thể gây lỗi ghi dữ liệu, crash ứng dụng hoặc dừng Pod nếu vượt quá giới hạn.
 
-                Giá trị: {{ $value }}%
-                Nhãn: {{ $labels }}
+      #           Giá trị: {{ $value }}%
+      #           Nhãn: {{ $labels }}
 
-          - alert: StatefulSet không đủ Pod
-            expr: kube_statefulset_replicas - kube_statefulset_status_replicas_ready > 0
-            for: 1m
-            labels:
-              severity: critical
-            annotations:
-              summary: "❗ StatefulSet không đủ Pod ({{ $labels.namespace }}/{{ $labels.statefulset }})"
-              description: >
-                StatefulSet `{{ $labels.namespace }}/{{ $labels.statefulset }}` đang có số lượng Pod sẵn sàng **ít hơn** so với kỳ vọng.
+      #     - alert: StatefulSet không đủ Pod
+      #       expr: kube_statefulset_replicas - kube_statefulset_status_replicas_ready > 0
+      #       for: 1m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "❗ StatefulSet không đủ Pod ({{ $labels.namespace }}/{{ $labels.statefulset }})"
+      #         description: >
+      #           StatefulSet `{{ $labels.namespace }}/{{ $labels.statefulset }}` đang có số lượng Pod sẵn sàng **ít hơn** so với kỳ vọng.
 
-                Số Pod cần: `kube_statefulset_replicas`
-                Số Pod sẵn sàng: `kube_statefulset_status_replicas_ready`
+      #           Số Pod cần: `kube_statefulset_replicas`
+      #           Số Pod sẵn sàng: `kube_statefulset_status_replicas_ready`
 
-                Có thể do lỗi container, node thiếu tài nguyên, hoặc PVC gặp sự cố.
+      #           Có thể do lỗi container, node thiếu tài nguyên, hoặc PVC gặp sự cố.
 
-                VALUE: {{ $value }}
-                LABELS: {{ $labels }}
+      #           VALUE: {{ $value }}
+      #           LABELS: {{ $labels }}
 
-          - alert: HPA không thể scale thêm
-            expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
-                  * on (horizontalpodautoscaler,namespace)
-                  (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "⚠️ HPA không thể scale thêm ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
-              description: >
-                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đang ở trạng thái *ScalingLimited*, tức là không thể mở rộng thêm số Pod dù có nhu cầu.
+      #     - alert: HPA không thể scale thêm
+      #       expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
+      #             * on (horizontalpodautoscaler,namespace)
+      #             (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "⚠️ HPA không thể scale thêm ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
+      #         description: >
+      #           HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đang ở trạng thái *ScalingLimited*, tức là không thể mở rộng thêm số Pod dù có nhu cầu.
 
-                Có thể do đã đạt đến giới hạn `maxReplicas`, tài nguyên cluster không đủ, hoặc Pod không khởi động được.
+      #           Có thể do đã đạt đến giới hạn `maxReplicas`, tài nguyên cluster không đủ, hoặc Pod không khởi động được.
 
-                Giá trị: {{ $value }}
-                Nhãn: {{ $labels }}
+      #           Giá trị: {{ $value }}
+      #           Nhãn: {{ $labels }}
 
-          - alert: HPA đã đạt đến giới hạn tối đa số Pod
-            expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
-                  and (kube_horizontalpodautoscaler_spec_max_replicas > 1)
-                  and (kube_horizontalpodautoscaler_spec_min_replicas != kube_horizontalpodautoscaler_spec_max_replicas)
-            for: 2m
-            labels:
-              severity: info
-            annotations:
-              summary: "ℹ️ HPA đã đạt đến giới hạn tối đa số Pod"
-              description: >
-                HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã scale đến số Pod tối đa được cấu hình (`maxReplicas`).
+      #     - alert: HPA đã đạt đến giới hạn tối đa số Pod
+      #       expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
+      #             and (kube_horizontalpodautoscaler_spec_max_replicas > 1)
+      #             and (kube_horizontalpodautoscaler_spec_min_replicas != kube_horizontalpodautoscaler_spec_max_replicas)
+      #       for: 2m
+      #       labels:
+      #         severity: info
+      #       annotations:
+      #         summary: "ℹ️ HPA đã đạt đến giới hạn tối đa số Pod"
+      #         description: >
+      #           HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã scale đến số Pod tối đa được cấu hình (`maxReplicas`).
 
-                👉 Điều này có thể cho thấy workload đang cần nhiều tài nguyên hơn, hoặc bạn nên cân nhắc nâng `maxReplicas`.
+      #           👉 Điều này có thể cho thấy workload đang cần nhiều tài nguyên hơn, hoặc bạn nên cân nhắc nâng `maxReplicas`.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+      #           📊 Giá trị: {{ $value }}
+      #           🏷️ Nhãn: {{ $labels }}
 
-          - alert: HPA đủ tài nguyên
-            expr: max(
-                    quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
-                    == kube_horizontalpodautoscaler_spec_min_replicas
-                  ) by (horizontalpodautoscaler) > 3
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "ℹ️ HPA sử dụng thấp – có thể dư tài nguyên"
-              description: >
-                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã hoạt động ở mức tối thiểu (`minReplicas`) trong **ít nhất 50% thời gian của 1 ngày qua**.
+      #     - alert: HPA đủ tài nguyên
+      #       expr: max(
+      #               quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
+      #               == kube_horizontalpodautoscaler_spec_min_replicas
+      #             ) by (horizontalpodautoscaler) > 3
+      #       for: 5m
+      #       labels:
+      #         severity: info
+      #       annotations:
+      #         summary: "ℹ️ HPA sử dụng thấp – có thể dư tài nguyên"
+      #         description: >
+      #           HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã hoạt động ở mức tối thiểu (`minReplicas`) trong **ít nhất 50% thời gian của 1 ngày qua**.
 
-                👉 Điều này có thể cho thấy ứng dụng đang được phân bổ tài nguyên dư thừa. Cân nhắc giảm số lượng replica hoặc tiết kiệm chi phí.
+      #           👉 Điều này có thể cho thấy ứng dụng đang được phân bổ tài nguyên dư thừa. Cân nhắc giảm số lượng replica hoặc tiết kiệm chi phí.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+      #           📊 Giá trị: {{ $value }}
+      #           🏷️ Nhãn: {{ $labels }}
 
-          - alert: LỖI POD
-            expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
-            for: 15m
-            labels:
-              severity: critical
-            annotations:
-              summary: "❗đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút"
-              description: >
-                Pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút.
+      #     - alert: LỖI POD
+      #       expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
+      #       for: 15m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "❗đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút"
+      #         description: >
+      #           Pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã ở trạng thái không hoạt động (Pending, Unknown hoặc Failed) liên tục trong hơn 15 phút.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+      #           📊 Giá trị: {{ $value }}
+      #           🏷️ Nhãn: {{ $labels }}
 
-          - alert: RAM máy chủ hết
-            expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.05
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} sắp hết bộ nhớ"
-              description: "Bộ nhớ khả dụng dưới 5% trong hơn 2 phút trên máy chủ {{ $labels.instance }}. Cần kiểm tra các tiến trình sử dụng nhiều RAM."
-
-
-          - alert: Máy chủ bị áp lực bộ nhớ
-            expr: rate(node_vmstat_pgmajfault[5m]) > 1000
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang chịu áp lực bộ nhớ"
-              description: >
-                Tốc độ lỗi major page fault trên máy chủ {{ $labels.instance }} cao bất thường, cho thấy hệ thống đang phải liên tục nạp trang bộ nhớ từ đĩa vào RAM. Đây là dấu hiệu hệ thống đang thiếu bộ nhớ vật lý.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: RAM máy chủ hết
+      #       expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.05
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} sắp hết bộ nhớ"
+      #         description: "Bộ nhớ khả dụng dưới 5% trong hơn 2 phút trên máy chủ {{ $labels.instance }}. Cần kiểm tra các tiến trình sử dụng nhiều RAM."
 
 
-
-          - alert: HostMemoryIsUnderutilized
-            expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang sử dụng bộ nhớ quá ít"
-              description: >
-                Trong vòng 1 tuần qua, mức sử dụng bộ nhớ của máy chủ {{ $labels.instance }} luôn dưới 20%. Bạn có thể cân nhắc giảm dung lượng RAM để tối ưu chi phí hoặc tài nguyên hệ thống.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-
-          - alert: Ram sử dụng thấp
-            expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} sử dụng bộ nhớ thấp trong 1 tuần"
-              description: >
-                Trong suốt 1 tuần qua, máy chủ {{ $labels.instance }} sử dụng dưới 20% tổng dung lượng RAM. Bạn có thể cân nhắc giảm tài nguyên bộ nhớ để tối ưu chi phí hoặc phân bổ lại cho workload khác.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-          - alert: Lưu lượng mạng vào cao bất thường
-            expr: ((rate(node_network_receive_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80)
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang có lưu lượng mạng vào cao bất thường"
-              description: >
-                Băng thông nhận dữ liệu của máy chủ {{ $labels.instance }} đang vượt quá 80% tốc độ tối đa của card mạng. Điều này có thể dẫn đến nghẽn mạng hoặc làm chậm các dịch vụ liên quan.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-          - alert: Lưu lượng mạng ra bất thường
-            expr: (rate(node_network_transmit_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang có lưu lượng mạng ra cao bất thường"
-              description: >
-                Băng thông truyền dữ liệu từ máy chủ {{ $labels.instance }} đang vượt quá 80% tốc độ tối đa của card mạng. Điều này có thể ảnh hưởng đến hiệu năng các dịch vụ, gây trễ hoặc nghẽn mạng.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-          - alert: Tốc độ đọc đĩa cao bất thường
-            expr: rate(node_disk_io_time_seconds_total[5m]) > 0.80
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có tốc độ đọc đĩa bất thường"
-              description: >
-                Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang bận đọc dữ liệu hơn 80% thời gian, có thể gây chậm hệ thống hoặc tăng độ trễ truy xuất. Hãy kiểm tra các tiến trình I/O lớn hoặc tải đĩa đột biến.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Máy chủ bị áp lực bộ nhớ
+      #       expr: rate(node_vmstat_pgmajfault[5m]) > 1000
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang chịu áp lực bộ nhớ"
+      #         description: >
+      #           Tốc độ lỗi major page fault trên máy chủ {{ $labels.instance }} cao bất thường, cho thấy hệ thống đang phải liên tục nạp trang bộ nhớ từ đĩa vào RAM. Đây là dấu hiệu hệ thống đang thiếu bộ nhớ vật lý.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
 
-          - alert: Máy chủ sắp hết dung lượng
-            expr: (node_filesystem_avail_bytes{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} / node_filesystem_size_bytes < 0.10 and on (instance, device, mountpoint) node_filesystem_readonly == 0)
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} gần đầy dung lượng đĩa"
-              description: >
-                Thiết bị lưu trữ tại mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} còn dưới 10% dung lượng khả dụng. Nếu không giải phóng hoặc mở rộng kịp thời, hệ thống có thể gặp lỗi ghi dữ liệu.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Máy chủ sắp cạn Inode
-            expr: (node_filesystem_files_free / node_filesystem_files < 0.10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} sắp hết inode"
-              description: >
-                Ổ đĩa tại mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} sắp hết inode khả dụng (còn dưới 10%). Điều này có thể khiến hệ thống không thể tạo thêm file dù vẫn còn dung lượng đĩa trống.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: HostMemoryIsUnderutilized
+      #       expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
+      #       for: 5m
+      #       labels:
+      #         severity: info
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang sử dụng bộ nhớ quá ít"
+      #         description: >
+      #           Trong vòng 1 tuần qua, mức sử dụng bộ nhớ của máy chủ {{ $labels.instance }} luôn dưới 20%. Bạn có thể cân nhắc giảm dung lượng RAM để tối ưu chi phí hoặc tài nguyên hệ thống.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lỗi Hệ Thống Tệp trên máy chủ
-            expr: node_filesystem_device_error{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} == 1
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Lỗi hệ thống tệp tại {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }}"
-              description: >
-                Máy chủ {{ $labels.instance }} gặp lỗi khi truy xuất hệ thống tệp tại mountpoint {{ $labels.mountpoint }}. Điều này có thể do lỗi thiết bị lưu trữ, hỏng ổ đĩa, hoặc mất kết nối. Cần kiểm tra ngay để tránh mất dữ liệu.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Dự Đoán Inode Trong 24h
-            expr: predict_linear(node_filesystem_files_free{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"}[1h], 86400) <= 0 and node_filesystem_files_free > 0
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có nguy cơ hết inode trong 24 giờ"
-              description: >
-                Hệ thống dự đoán mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} sẽ hết inode trong vòng 24 giờ nếu tốc độ ghi hiện tại tiếp tục duy trì. Vui lòng kiểm tra và xử lý sớm để tránh gián đoạn dịch vụ.
-                ▸ Giá trị dự đoán: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Ram sử dụng thấp
+      #       expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
+      #       for: 5m
+      #       labels:
+      #         severity: info
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} sử dụng bộ nhớ thấp trong 1 tuần"
+      #         description: >
+      #           Trong suốt 1 tuần qua, máy chủ {{ $labels.instance }} sử dụng dưới 20% tổng dung lượng RAM. Bạn có thể cân nhắc giảm tài nguyên bộ nhớ để tối ưu chi phí hoặc phân bổ lại cho workload khác.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Độ trễ đọc đĩa bất thường
-            expr: (rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 0.1 and rate(node_disk_reads_completed_total[1m]) > 0)
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có độ trễ đọc đĩa bất thường"
-              description: >
-                Độ trễ trung bình của các thao tác đọc trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu của ổ đĩa sắp hỏng hoặc bị quá tải I/O.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Lưu lượng mạng vào cao bất thường
+      #       expr: ((rate(node_network_receive_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80)
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang có lưu lượng mạng vào cao bất thường"
+      #         description: >
+      #           Băng thông nhận dữ liệu của máy chủ {{ $labels.instance }} đang vượt quá 80% tốc độ tối đa của card mạng. Điều này có thể dẫn đến nghẽn mạng hoặc làm chậm các dịch vụ liên quan.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Độ Trễ Ghi Đĩa Bất Thường
-            expr: (rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0)
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có độ trễ ghi đĩa bất thường"
-              description: >
-                Độ trễ trung bình của các thao tác ghi dữ liệu trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu ổ đĩa đang bị quá tải, có lỗi phần cứng hoặc I/O bottleneck.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Lưu lượng mạng ra bất thường
+      #       expr: (rate(node_network_transmit_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang có lưu lượng mạng ra cao bất thường"
+      #         description: >
+      #           Băng thông truyền dữ liệu từ máy chủ {{ $labels.instance }} đang vượt quá 80% tốc độ tối đa của card mạng. Điều này có thể ảnh hưởng đến hiệu năng các dịch vụ, gây trễ hoặc nghẽn mạng.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Tải CPU máy chủ đang cao
-            expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m])) > 0.80
-            for: 15m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang có mức sử dụng CPU cao"
-              description: >
-                Tải CPU của máy chủ {{ $labels.instance }} đã vượt quá 80% trong vòng 10 phút liên tục. Điều này có thể ảnh hưởng đến hiệu suất xử lý của hệ thống hoặc gây trễ cho các ứng dụng đang chạy.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Tốc độ đọc đĩa cao bất thường
+      #       expr: rate(node_disk_io_time_seconds_total[5m]) > 0.80
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có tốc độ đọc đĩa bất thường"
+      #         description: >
+      #           Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang bận đọc dữ liệu hơn 80% thời gian, có thể gây chậm hệ thống hoặc tăng độ trễ truy xuất. Hãy kiểm tra các tiến trình I/O lớn hoặc tải đĩa đột biến.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          # - alert: TaiNguyenCpuSuDungThap
-          #   expr: (min by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1h]))) > 0.8
-          #   for: 1w
-          #   labels:
-          #     severity: info
-          #   annotations:
-          #     summary: "Máy chủ {{ $labels.instance }} sử dụng CPU quá thấp trong 1 tuần"
-          #     description: >
-          #       CPU của máy chủ {{ $labels.instance }} hoạt động dưới 20% trong suốt 1 tuần qua. Bạn có thể cân nhắc giảm số lượng CPU hoặc phân bổ tài nguyên hiệu quả hơn.
-          #       ▸ Giá trị hiện tại: {{ $value }}
-          #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: VMBiAnhHuongBoiNoisyNeighbor
-            expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} bị ảnh hưởng bởi CPU steal cao"
-              description: >
-                Mức CPU steal trên máy chủ {{ $labels.instance }} đang vượt quá 10%. Điều này cho thấy có thể đang bị ảnh hưởng bởi noisy neighbor trong môi trường ảo hóa, hoặc phiên bản spot đã hết credit CPU dẫn đến hiệu năng thấp.
-                ▸ Giá trị hiện tại: {{ $value }}%
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Máy chủ sắp hết dung lượng
+      #       expr: (node_filesystem_avail_bytes{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} / node_filesystem_size_bytes < 0.10 and on (instance, device, mountpoint) node_filesystem_readonly == 0)
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} gần đầy dung lượng đĩa"
+      #         description: >
+      #           Thiết bị lưu trữ tại mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} còn dưới 10% dung lượng khả dụng. Nếu không giải phóng hoặc mở rộng kịp thời, hệ thống có thể gặp lỗi ghi dữ liệu.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Cpu Iowait Cao
-            expr: avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > 0.10
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có mức iowait CPU cao"
-              description: >
-                Mức iowait trên CPU của máy chủ {{ $labels.instance }} đang vượt quá 10%. Điều này cho thấy CPU đang bị chặn vì phải chờ phản hồi từ thiết bị lưu trữ (đĩa, SSD...), có thể do I/O chậm hoặc quá tải.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Máy chủ sắp cạn Inode
+      #       expr: (node_filesystem_files_free / node_filesystem_files < 0.10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} sắp hết inode"
+      #         description: >
+      #           Ổ đĩa tại mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} sắp hết inode khả dụng (còn dưới 10%). Điều này có thể khiến hệ thống không thể tạo thêm file dù vẫn còn dung lượng đĩa trống.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Hoạt động IO của đĩa đang bất thường
-            expr: rate(node_disk_io_time_seconds_total[5m]) > 0.8
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang hoạt động quá mức"
-              description: >
-                Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang hoạt động hơn 80% thời gian trong 5 phút gần nhất. Điều này có thể gây ra độ trễ I/O hoặc ảnh hưởng đến hiệu suất hệ thống. Vui lòng kiểm tra tình trạng lưu trữ, mở rộng IOPS nếu cần.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Lỗi Hệ Thống Tệp trên máy chủ
+      #       expr: node_filesystem_device_error{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} == 1
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Lỗi hệ thống tệp tại {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }}"
+      #         description: >
+      #           Máy chủ {{ $labels.instance }} gặp lỗi khi truy xuất hệ thống tệp tại mountpoint {{ $labels.mountpoint }}. Điều này có thể do lỗi thiết bị lưu trữ, hỏng ổ đĩa, hoặc mất kết nối. Cần kiểm tra ngay để tránh mất dữ liệu.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lượt chuyển ngữ cảnh cao bất thường
-            expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
-                  /
-                  (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có số lần chuyển ngữ cảnh tăng cao bất thường"
-              description: >
-                Số lần chuyển ngữ cảnh (context switching) trên máy chủ {{ $labels.instance }} trong 15 phút gần nhất đang cao gấp đôi trung bình 1 ngày. Điều này có thể là dấu hiệu cho thấy hệ thống đang xử lý quá nhiều tiến trình nhỏ hoặc có vấn đề về lịch trình CPU.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Dự Đoán Inode Trong 24h
+      #       expr: predict_linear(node_filesystem_files_free{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"}[1h], 86400) <= 0 and node_filesystem_files_free > 0
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có nguy cơ hết inode trong 24 giờ"
+      #         description: >
+      #           Hệ thống dự đoán mountpoint {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }} sẽ hết inode trong vòng 24 giờ nếu tốc độ ghi hiện tại tiếp tục duy trì. Vui lòng kiểm tra và xử lý sớm để tránh gián đoạn dịch vụ.
+      #           ▸ Giá trị dự đoán: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Swap Đang cao
-            expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80)
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} đang sử dụng swap vượt quá 80%"
-              description: >
-                Vùng swap trên máy chủ {{ $labels.instance }} đang được sử dụng vượt quá 80%. Việc sử dụng swap cao có thể làm hệ thống chậm lại đáng kể và là dấu hiệu cho thấy bộ nhớ vật lý (RAM) đang thiếu hụt.
-                ▸ Giá trị hiện tại: {{ $value }}%
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Độ trễ đọc đĩa bất thường
+      #       expr: (rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 0.1 and rate(node_disk_reads_completed_total[1m]) > 0)
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có độ trễ đọc đĩa bất thường"
+      #         description: >
+      #           Độ trễ trung bình của các thao tác đọc trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu của ổ đĩa sắp hỏng hoặc bị quá tải I/O.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Dịch vụ systemd bị lỗi
-            expr: node_systemd_unit_state{state="failed"} == 1
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
-              description: >
-                Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Độ Trễ Ghi Đĩa Bất Thường
+      #       expr: (rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0)
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có độ trễ ghi đĩa bất thường"
+      #         description: >
+      #           Độ trễ trung bình của các thao tác ghi dữ liệu trên thiết bị lưu trữ của máy chủ {{ $labels.instance }} đang vượt quá 105ms. Đây có thể là dấu hiệu ổ đĩa đang bị quá tải, có lỗi phần cứng hoặc I/O bottleneck.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Thay Đổi Phiên Bản kernel
-            expr: changes(node_uname_info[1h]) > 0
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
-              description: >
-                Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Tải CPU máy chủ đang cao
+      #       expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m])) > 0.80
+      #       for: 15m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang có mức sử dụng CPU cao"
+      #         description: >
+      #           Tải CPU của máy chủ {{ $labels.instance }} đã vượt quá 80% trong vòng 10 phút liên tục. Điều này có thể ảnh hưởng đến hiệu suất xử lý của hệ thống hoặc gây trễ cho các ứng dụng đang chạy.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Phát hiện tiến trình OOM  Kill
-            expr: increase(node_vmstat_oom_kill[1m]) > 0
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Phát hiện OOM Kill trên máy chủ {{ $labels.instance }}"
-              description: >
-                Hệ thống đã ghi nhận một hoặc nhiều tiến trình bị kết thúc do thiếu bộ nhớ (OOM Kill) trên máy chủ {{ $labels.instance }}. Cần kiểm tra nguyên nhân (ứng dụng chiếm RAM cao, thiếu swap, cấu hình giới hạn bộ nhớ...).
-                ▸ Số lượng OOM kill mới: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     # - alert: TaiNguyenCpuSuDungThap
+      #     #   expr: (min by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1h]))) > 0.8
+      #     #   for: 1w
+      #     #   labels:
+      #     #     severity: info
+      #     #   annotations:
+      #     #     summary: "Máy chủ {{ $labels.instance }} sử dụng CPU quá thấp trong 1 tuần"
+      #     #     description: >
+      #     #       CPU của máy chủ {{ $labels.instance }} hoạt động dưới 20% trong suốt 1 tuần qua. Bạn có thể cân nhắc giảm số lượng CPU hoặc phân bổ tài nguyên hiệu quả hơn.
+      #     #       ▸ Giá trị hiện tại: {{ $value }}
+      #     #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lỗi Nhận gói tin mạng
-            expr: rate(node_network_receive_errs_total[2m]) / rate(node_network_receive_packets_total[2m]) > 0.01
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Giao diện mạng của máy chủ {{ $labels.instance }} gặp lỗi khi nhận gói tin"
-              description: >
-                Trong 2 phút gần đây, giao diện mạng {{ $labels.device }} trên máy chủ {{ $labels.instance }} đã gặp lỗi nhận gói tin với tỷ lệ vượt 1%. Điều này có thể gây mất kết nối hoặc suy giảm hiệu năng truyền tải.
-                ▸ Tổng lỗi nhận: {{ printf "%.0f" $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: VMBiAnhHuongBoiNoisyNeighbor
+      #       expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} bị ảnh hưởng bởi CPU steal cao"
+      #         description: >
+      #           Mức CPU steal trên máy chủ {{ $labels.instance }} đang vượt quá 10%. Điều này cho thấy có thể đang bị ảnh hưởng bởi noisy neighbor trong môi trường ảo hóa, hoặc phiên bản spot đã hết credit CPU dẫn đến hiệu năng thấp.
+      #           ▸ Giá trị hiện tại: {{ $value }}%
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Bonding trên máy chủ bị giảm
-            expr: (node_bonding_active - node_bonding_slaves) != 0
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Giao diện bonding trên máy chủ {{ $labels.instance }} bị suy giảm"
-              description: >
-                Giao diện bonding "{{ $labels.device }}" trên máy chủ {{ $labels.instance }} không còn đủ số lượng interface thành phần (slave) hoạt động. Điều này làm giảm tính dự phòng và hiệu năng mạng.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Cpu Iowait Cao
+      #       expr: avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > 0.10
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có mức iowait CPU cao"
+      #         description: >
+      #           Mức iowait trên CPU của máy chủ {{ $labels.instance }} đang vượt quá 10%. Điều này cho thấy CPU đang bị chặn vì phải chờ phản hồi từ thiết bị lưu trữ (đĩa, SSD...), có thể do I/O chậm hoặc quá tải.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Đồng bộ thời gian không hoạt động
-            expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16)
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} không đồng bộ thời gian"
-              description: >
-                Đồng hồ hệ thống trên máy chủ {{ $labels.instance }} không được đồng bộ với NTP và độ lệch thời gian đã vượt quá ngưỡng cho phép (>= 16 giây). Vui lòng kiểm tra cấu hình và trạng thái dịch vụ NTP/chrony.
-                ▸ Giá trị hiện tại: {{ $value }} giây
-                ▸ Thông tin nhãn: {{ $labels }}
+      #     - alert: Hoạt động IO của đĩa đang bất thường
+      #       expr: rate(node_disk_io_time_seconds_total[5m]) > 0.8
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang hoạt động quá mức"
+      #         description: >
+      #           Thiết bị lưu trữ trên máy chủ {{ $labels.instance }} đang hoạt động hơn 80% thời gian trong 5 phút gần nhất. Điều này có thể gây ra độ trễ I/O hoặc ảnh hưởng đến hiệu suất hệ thống. Vui lòng kiểm tra tình trạng lưu trữ, mở rộng IOPS nếu cần.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: STATUS SERVER
-            expr: up{job='kubernetes-nodes'} == 0
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} bị tắt"
-              description: "Hệ thống phát hiện máy chủ {{ $labels.instance }} đã ngừng phản hồi trong hơn 2 phút. Vui lòng kiểm tra tình trạng kết nối hoặc dịch vụ."
+      #     - alert: Lượt chuyển ngữ cảnh cao bất thường
+      #       expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
+      #             /
+      #             (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có số lần chuyển ngữ cảnh tăng cao bất thường"
+      #         description: >
+      #           Số lần chuyển ngữ cảnh (context switching) trên máy chủ {{ $labels.instance }} trong 15 phút gần nhất đang cao gấp đôi trung bình 1 ngày. Điều này có thể là dấu hiệu cho thấy hệ thống đang xử lý quá nhiều tiến trình nhỏ hoặc có vấn đề về lịch trình CPU.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Swap Đang cao
+      #       expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80)
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} đang sử dụng swap vượt quá 80%"
+      #         description: >
+      #           Vùng swap trên máy chủ {{ $labels.instance }} đang được sử dụng vượt quá 80%. Việc sử dụng swap cao có thể làm hệ thống chậm lại đáng kể và là dấu hiệu cho thấy bộ nhớ vật lý (RAM) đang thiếu hụt.
+      #           ▸ Giá trị hiện tại: {{ $value }}%
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Dịch vụ systemd bị lỗi
+      #       expr: node_systemd_unit_state{state="failed"} == 1
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
+      #         description: >
+      #           Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Thay Đổi Phiên Bản kernel
+      #       expr: changes(node_uname_info[1h]) > 0
+      #       for: 5m
+      #       labels:
+      #         severity: info
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
+      #         description: >
+      #           Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Phát hiện tiến trình OOM  Kill
+      #       expr: increase(node_vmstat_oom_kill[1m]) > 0
+      #       for: 5m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Phát hiện OOM Kill trên máy chủ {{ $labels.instance }}"
+      #         description: >
+      #           Hệ thống đã ghi nhận một hoặc nhiều tiến trình bị kết thúc do thiếu bộ nhớ (OOM Kill) trên máy chủ {{ $labels.instance }}. Cần kiểm tra nguyên nhân (ứng dụng chiếm RAM cao, thiếu swap, cấu hình giới hạn bộ nhớ...).
+      #           ▸ Số lượng OOM kill mới: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Lỗi Nhận gói tin mạng
+      #       expr: rate(node_network_receive_errs_total[2m]) / rate(node_network_receive_packets_total[2m]) > 0.01
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Giao diện mạng của máy chủ {{ $labels.instance }} gặp lỗi khi nhận gói tin"
+      #         description: >
+      #           Trong 2 phút gần đây, giao diện mạng {{ $labels.device }} trên máy chủ {{ $labels.instance }} đã gặp lỗi nhận gói tin với tỷ lệ vượt 1%. Điều này có thể gây mất kết nối hoặc suy giảm hiệu năng truyền tải.
+      #           ▸ Tổng lỗi nhận: {{ printf "%.0f" $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Bonding trên máy chủ bị giảm
+      #       expr: (node_bonding_active - node_bonding_slaves) != 0
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Giao diện bonding trên máy chủ {{ $labels.instance }} bị suy giảm"
+      #         description: >
+      #           Giao diện bonding "{{ $labels.device }}" trên máy chủ {{ $labels.instance }} không còn đủ số lượng interface thành phần (slave) hoạt động. Điều này làm giảm tính dự phòng và hiệu năng mạng.
+      #           ▸ Giá trị hiện tại: {{ $value }}
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: Đồng bộ thời gian không hoạt động
+      #       expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16)
+      #       for: 2m
+      #       labels:
+      #         severity: warning
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} không đồng bộ thời gian"
+      #         description: >
+      #           Đồng hồ hệ thống trên máy chủ {{ $labels.instance }} không được đồng bộ với NTP và độ lệch thời gian đã vượt quá ngưỡng cho phép (>= 16 giây). Vui lòng kiểm tra cấu hình và trạng thái dịch vụ NTP/chrony.
+      #           ▸ Giá trị hiện tại: {{ $value }} giây
+      #           ▸ Thông tin nhãn: {{ $labels }}
+
+      #     - alert: STATUS SERVER
+      #       expr: up{job='kubernetes-nodes'} == 0
+      #       for: 2m
+      #       labels:
+      #         severity: critical
+      #       annotations:
+      #         summary: "Máy chủ {{ $labels.instance }} bị tắt"
+      #         description: "Hệ thống phát hiện máy chủ {{ $labels.instance }} đã ngừng phản hồi trong hơn 2 phút. Vui lòng kiểm tra tình trạng kết nối hoặc dịch vụ."
 
 persistence:
   enabled: false
