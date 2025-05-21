@@ -52,7 +52,7 @@ configMap:
               category: kubernetes
               instance: "{{ $labels.pod }}"
             annotations:
-              summary: "Tài nguyên tăng"
+              summary: "Tài nguyên tăng  Giá trị: {{ $value }}"
               description: "cảnh báo"
 
           - alert: K8S-Node Không Sẵn Sàng
