@@ -1,4 +1,5 @@
 # Default values for prometheus.
+# ---- giữ nguyên ---- #
 nameOverride: ""
 fullnameOverride: ""
 
@@ -8,7 +9,7 @@ serviceAccount:
   name: ""
 
 namespace: emso-monitoring
-nodeName: cluster-sn-ng-web-uofhe7fduf4d-node-537
+nodeName: k8s-sn-production-ng-monitor-worker-b9dgm-z9gsb
 image:
   repository: prom/prometheus
   pullPolicy: IfNotPresent
@@ -18,7 +19,7 @@ reloaderImage:
   repository: ghcr.io/prometheus-operator/prometheus-config-reloader
   pullPolicy: IfNotPresent
   tag: v0.72.0
-
+# ---- giữ nguyên ---- #
 service:
   type: NodePort
   port: 9090
@@ -151,24 +152,22 @@ configMap:
                 VALUE: {{ $value }}
                 LABELS: {{ $labels }}
 
-          - alert: HPA không thể scale thêm
+          - alert: HpaScalingLimited
             expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
-                  * on (horizontalpodautoscaler,namespace)
+                  * on (horizontalpodautoscaler, namespace, job)
                   (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
             for: 2m
             labels:
               severity: warning
             annotations:
-              summary: "⚠️ HPA không thể scale thêm ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
+              summary: "⚠️ HPA bị giới hạn scale ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
               description: >
-                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đang ở trạng thái *ScalingLimited*, tức là không thể mở rộng thêm số Pod dù có nhu cầu.
+                HPA không thể scale thêm (ScalingLimited=true). Có thể do đạt maxReplicas hoặc thiếu tài nguyên.
+                VALUE: {{ $value }}
 
-                Có thể do đã đạt đến giới hạn `maxReplicas`, tài nguyên cluster không đủ, hoặc Pod không khởi động được.
 
-                Giá trị: {{ $value }}
-                Nhãn: {{ $labels }}
 
-          - alert: HPA đã đạt đến giới hạn tối đa số Pod
+          - alert: HpaMaxReplicasReached
             expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
                   and (kube_horizontalpodautoscaler_spec_max_replicas > 1)
                   and (kube_horizontalpodautoscaler_spec_min_replicas != kube_horizontalpodautoscaler_spec_max_replicas)
@@ -176,14 +175,11 @@ configMap:
             labels:
               severity: info
             annotations:
-              summary: "ℹ️ HPA đã đạt đến giới hạn tối đa số Pod"
+              summary: "ℹ️ HPA đã đạt maxReplicas ({{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }})"
               description: >
-                HPA `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã scale đến số Pod tối đa được cấu hình (`maxReplicas`).
+                HPA đã scale hết mức cho phép. Cân nhắc nâng maxReplicas nếu workload còn cần thêm.
+                VALUE: {{ $value }}
 
-                👉 Điều này có thể cho thấy workload đang cần nhiều tài nguyên hơn, hoặc bạn nên cân nhắc nâng `maxReplicas`.
-
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
 
           - alert: HPA đủ tài nguyên
             expr: max(
@@ -326,18 +322,6 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lỗi Hệ Thống Tệp trên máy chủ
-            expr: node_filesystem_device_error{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} == 1
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Lỗi hệ thống tệp tại {{ $labels.mountpoint }} trên máy chủ {{ $labels.instance }}"
-              description: >
-                Máy chủ {{ $labels.instance }} gặp lỗi khi truy xuất hệ thống tệp tại mountpoint {{ $labels.mountpoint }}. Điều này có thể do lỗi thiết bị lưu trữ, hỏng ổ đĩa, hoặc mất kết nối. Cần kiểm tra ngay để tránh mất dữ liệu.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
           - alert: Dự Đoán Inode Trong 24h
             expr: predict_linear(node_filesystem_files_free{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"}[1h], 86400) <= 0 and node_filesystem_files_free > 0
             for: 2m
@@ -434,19 +418,19 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lượt chuyển ngữ cảnh cao bất thường
-            expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
-                  /
-                  (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có số lần chuyển ngữ cảnh tăng cao bất thường"
-              description: >
-                Số lần chuyển ngữ cảnh (context switching) trên máy chủ {{ $labels.instance }} trong 15 phút gần nhất đang cao gấp đôi trung bình 1 ngày. Điều này có thể là dấu hiệu cho thấy hệ thống đang xử lý quá nhiều tiến trình nhỏ hoặc có vấn đề về lịch trình CPU.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+          # - alert: Lượt chuyển ngữ cảnh cao bất thường
+          #   expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
+          #         /
+          #         (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
+          #   for: 5m
+          #   labels:
+          #     severity: warning
+          #   annotations:
+          #     summary: "Máy chủ {{ $labels.instance }} có số lần chuyển ngữ cảnh tăng cao bất thường"
+          #     description: >
+          #       Số lần chuyển ngữ cảnh (context switching) trên máy chủ {{ $labels.instance }} trong 15 phút gần nhất đang cao gấp đôi trung bình 1 ngày. Điều này có thể là dấu hiệu cho thấy hệ thống đang xử lý quá nhiều tiến trình nhỏ hoặc có vấn đề về lịch trình CPU.
+          #       ▸ Giá trị hiện tại: {{ $value }}
+          #       ▸ Thông tin nhãn: {{ $labels }}
 
           - alert: Swap Đang cao
             expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80)
@@ -460,65 +444,30 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}%
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Dịch vụ systemd bị lỗi
-            expr: node_systemd_unit_state{state="failed"} == 1
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
-              description: >
-                Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+          # - alert: Dịch vụ systemd bị lỗi
+          #   expr: node_systemd_unit_state{state="failed"} == 1
+          #   for: 5m
+          #   labels:
+          #     severity: warning
+          #   annotations:
+          #     summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
+          #     description: >
+          #       Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
+          #       ▸ Giá trị hiện tại: {{ $value }}
+          #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Thay Đổi Phiên Bản kernel
-            expr: changes(node_uname_info[1h]) > 0
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
-              description: >
-                Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
+          # - alert: Thay Đổi Phiên Bản kernel
+          #   expr: changes(node_uname_info[1h]) > 0
+          #   for: 5m
+          #   labels:
+          #     severity: info
+          #   annotations:
+          #     summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
+          #     description: >
+          #       Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
+          #       ▸ Giá trị hiện tại: {{ $value }}
+          #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Phát hiện tiến trình OOM  Kill
-            expr: increase(node_vmstat_oom_kill[1m]) > 0
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Phát hiện OOM Kill trên máy chủ {{ $labels.instance }}"
-              description: >
-                Hệ thống đã ghi nhận một hoặc nhiều tiến trình bị kết thúc do thiếu bộ nhớ (OOM Kill) trên máy chủ {{ $labels.instance }}. Cần kiểm tra nguyên nhân (ứng dụng chiếm RAM cao, thiếu swap, cấu hình giới hạn bộ nhớ...).
-                ▸ Số lượng OOM kill mới: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-          - alert: Lỗi Nhận gói tin mạng
-            expr: rate(node_network_receive_errs_total[2m]) / rate(node_network_receive_packets_total[2m]) > 0.01
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Giao diện mạng của máy chủ {{ $labels.instance }} gặp lỗi khi nhận gói tin"
-              description: >
-                Trong 2 phút gần đây, giao diện mạng {{ $labels.device }} trên máy chủ {{ $labels.instance }} đã gặp lỗi nhận gói tin với tỷ lệ vượt 1%. Điều này có thể gây mất kết nối hoặc suy giảm hiệu năng truyền tải.
-                ▸ Tổng lỗi nhận: {{ printf "%.0f" $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
-
-          - alert: Bonding trên máy chủ bị giảm
-            expr: (node_bonding_active - node_bonding_slaves) != 0
-            for: 2m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Giao diện bonding trên máy chủ {{ $labels.instance }} bị suy giảm"
-              description: >
-                Giao diện bonding "{{ $labels.device }}" trên máy chủ {{ $labels.instance }} không còn đủ số lượng interface thành phần (slave) hoạt động. Điều này làm giảm tính dự phòng và hiệu năng mạng.
-                ▸ Giá trị hiện tại: {{ $value }}
-                ▸ Thông tin nhãn: {{ $labels }}
 
           - alert: Đồng bộ thời gian không hoạt động
             expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16)
