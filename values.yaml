@@ -55,7 +55,7 @@ configMap:
               summary: "Tài nguyên tăng"
               description: "cảnh báo"
 
-          - alert: Node Không Sẵn Sàng
+          - alert: K8S-Node Không Sẵn Sàng
             expr: kube_node_status_condition{condition="Ready",status="true"} == 0
             for: 15m
             labels:
@@ -70,7 +70,7 @@ configMap:
                  Nhãn: {{ $labels }}
                  Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: Node bị DiskPressure
+          - alert: K8S-Node bị DiskPressure
             expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
             for: 2m
             labels:
@@ -86,7 +86,7 @@ configMap:
                 Nhãn: {{ $labels }}
                 Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: Container bị OOMKilled
+          - alert: K8S-Container bị OOMKilled
             expr: (kube_pod_container_status_restarts_total - kube_pod_container_status_restarts_total offset 15m >= 1)
               and ignoring (reason)
               min_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}[15m]) == 1
@@ -104,7 +104,7 @@ configMap:
                 Nhãn: {{ $labels }}
                 Thời gian: {{ $value | humanizeTimestamp }}
 
-          - alert: PVC Đang chờ được cấp phát
+          - alert: K8S-PVC Đang chờ được cấp phát
             expr: kube_persistentvolumeclaim_status_phase{phase="Pending"} == 1
             for: 2m
             labels:
@@ -119,7 +119,7 @@ configMap:
                 Giá trị: {{ $value }}
                 Nhãn: {{ $labels }}
 
-          - alert: Volume Gần đầy dung lượng
+          - alert: K8S-Volume Gần đầy dung lượng
             expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes * 100 < 10
             for: 2m
             labels:
@@ -134,7 +134,7 @@ configMap:
                 Giá trị: {{ $value }}%
                 Nhãn: {{ $labels }}
 
-          - alert: StatefulSet không đủ Pod
+          - alert: K8S-StatefulSet không đủ Pod
             expr: kube_statefulset_replicas - kube_statefulset_status_replicas_ready > 0
             for: 1m
             labels:
@@ -152,7 +152,7 @@ configMap:
                 VALUE: {{ $value }}
                 LABELS: {{ $labels }}
 
-          - alert: HpaScalingLimited
+          - alert: K8S-HpaScalingLimited
             expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
                   * on (horizontalpodautoscaler, namespace, job)
                   (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
@@ -167,7 +167,7 @@ configMap:
 
 
 
-          - alert: HpaMaxReplicasReached
+          - alert: K8S-HpaMaxReplicasReached
             expr: (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)
                   and (kube_horizontalpodautoscaler_spec_max_replicas > 1)
                   and (kube_horizontalpodautoscaler_spec_min_replicas != kube_horizontalpodautoscaler_spec_max_replicas)
@@ -181,7 +181,7 @@ configMap:
                 VALUE: {{ $value }}
 
 
-          - alert: HPA đủ tài nguyên
+          - alert: K8S-HPA đủ tài nguyên
             expr: max(
                     quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
                     == kube_horizontalpodautoscaler_spec_min_replicas
@@ -199,7 +199,7 @@ configMap:
                 📊 Giá trị: {{ $value }}
                 🏷️ Nhãn: {{ $labels }}
 
-          - alert: LỖI POD
+          - alert: K8S-LỖI POD
             expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
             for: 15m
             labels:
@@ -212,7 +212,7 @@ configMap:
                 📊 Giá trị: {{ $value }}
                 🏷️ Nhãn: {{ $labels }}
 
-          - alert: RAM máy chủ hết
+          - alert: K8S-RAM máy chủ hết
             expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.05
             for: 2m
             labels:
@@ -222,7 +222,7 @@ configMap:
               description: "Bộ nhớ khả dụng dưới 5% trong hơn 2 phút trên máy chủ {{ $labels.instance }}. Cần kiểm tra các tiến trình sử dụng nhiều RAM."
 
 
-          - alert: Máy chủ bị áp lực bộ nhớ
+          - alert: K8S-Máy chủ bị áp lực bộ nhớ
             expr: rate(node_vmstat_pgmajfault[5m]) > 1000
             for: 5m
             labels:
@@ -236,7 +236,7 @@ configMap:
 
 
 
-          - alert: HostMemoryIsUnderutilized
+          - alert: K8S-HostMemoryIsUnderutilized
             expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
             for: 5m
             labels:
@@ -249,7 +249,7 @@ configMap:
                 ▸ Thông tin nhãn: {{ $labels }}
 
 
-          - alert: Ram sử dụng thấp
+          - alert: K8S-Ram sử dụng thấp
             expr: min_over_time(node_memory_MemFree_bytes[1w]) > node_memory_MemTotal_bytes * 0.8
             for: 5m
             labels:
@@ -261,7 +261,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lưu lượng mạng vào cao bất thường
+          - alert: K8S-Lưu lượng mạng vào cao bất thường
             expr: ((rate(node_network_receive_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80)
             for: 5m
             labels:
@@ -273,7 +273,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Lưu lượng mạng ra bất thường
+          - alert: K8S-Lưu lượng mạng ra bất thường
             expr: (rate(node_network_transmit_bytes_total[5m]) / on(instance, device) node_network_speed_bytes) > 0.80
             for: 5m
             labels:
@@ -285,7 +285,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Tốc độ đọc đĩa cao bất thường
+          - alert: K8S-Tốc độ đọc đĩa cao bất thường
             expr: rate(node_disk_io_time_seconds_total[5m]) > 0.80
             for: 5m
             labels:
@@ -298,7 +298,7 @@ configMap:
                 ▸ Thông tin nhãn: {{ $labels }}
 
 
-          - alert: Máy chủ sắp hết dung lượng
+          - alert: K8S-Máy chủ sắp hết dung lượng
             expr: (node_filesystem_avail_bytes{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} / node_filesystem_size_bytes < 0.10 and on (instance, device, mountpoint) node_filesystem_readonly == 0)
             for: 2m
             labels:
@@ -310,7 +310,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Máy chủ sắp cạn Inode
+          - alert: K8S-Máy chủ sắp cạn Inode
             expr: (node_filesystem_files_free / node_filesystem_files < 0.10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
             for: 2m
             labels:
@@ -322,7 +322,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Dự Đoán Inode Trong 24h
+          - alert: K8S-Dự Đoán Inode Trong 24h
             expr: predict_linear(node_filesystem_files_free{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"}[1h], 86400) <= 0 and node_filesystem_files_free > 0
             for: 2m
             labels:
@@ -334,7 +334,7 @@ configMap:
                 ▸ Giá trị dự đoán: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Độ trễ đọc đĩa bất thường
+          - alert: K8S-Độ trễ đọc đĩa bất thường
             expr: (rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 0.1 and rate(node_disk_reads_completed_total[1m]) > 0)
             for: 2m
             labels:
@@ -346,7 +346,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Độ Trễ Ghi Đĩa Bất Thường
+          - alert: K8S-Độ Trễ Ghi Đĩa Bất Thường
             expr: (rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0)
             for: 2m
             labels:
@@ -358,7 +358,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Tải CPU máy chủ đang cao
+          - alert: K8S-Tải CPU máy chủ đang cao
             expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m])) > 0.80
             for: 15m
             labels:
@@ -382,7 +382,7 @@ configMap:
           #       ▸ Giá trị hiện tại: {{ $value }}
           #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: VMBiAnhHuongBoiNoisyNeighbor
+          - alert: K8S-VMBiAnhHuongBoiNoisyNeighbor
             expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
             for: 5m
             labels:
@@ -394,7 +394,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}%
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Cpu Iowait Cao
+          - alert: K8S-Cpu Iowait Cao
             expr: avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) > 0.10
             for: 5m
             labels:
@@ -406,7 +406,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Hoạt động IO của đĩa đang bất thường
+          - alert: K8S-Hoạt động IO của đĩa đang bất thường
             expr: rate(node_disk_io_time_seconds_total[5m]) > 0.8
             for: 5m
             labels:
@@ -432,7 +432,7 @@ configMap:
           #       ▸ Giá trị hiện tại: {{ $value }}
           #       ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: Swap Đang cao
+          - alert: K8S-Swap Đang cao
             expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80)
             for: 2m
             labels:
@@ -469,7 +469,7 @@ configMap:
           #       ▸ Thông tin nhãn: {{ $labels }}
 
 
-          - alert: Đồng bộ thời gian không hoạt động
+          - alert: K8S-Đồng bộ thời gian không hoạt động
             expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16)
             for: 2m
             labels:
@@ -481,7 +481,7 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }} giây
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          - alert: STATUS SERVER
+          - alert: K8S-STATUS SERVER
             expr: up{job='kubernetes-nodes'} == 0
             for: 2m
             labels:
