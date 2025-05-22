@@ -94,7 +94,7 @@ configMap:
             labels:
               severity: warning
             annotations:
-              summary: "⚠️ Container bị thiếu bộ nhớ (OOMKilled)"
+              summary: "Container bị thiếu bộ nhớ (OOMKilled)"
               description: >
                 Container `{{ $labels.container }}` trong pod `{{ $labels.namespace }}/{{ $labels.pod }}` đã bị hệ thống dừng do vượt quá giới hạn bộ nhớ (OOMKilled) ít nhất 1 lần trong 10 phút gần đây.
 
@@ -152,10 +152,10 @@ configMap:
                 VALUE: {{ $value }}
                 LABELS: {{ $labels }}
 
-          - alert: K8S-HpaScalingLimited
+          - alert: K8S-Hpa-Scaling-Limited
             expr: (kube_horizontalpodautoscaler_spec_max_replicas - kube_horizontalpodautoscaler_status_desired_replicas)
                   * on (horizontalpodautoscaler, namespace, job)
-                  (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 0
+                  (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited", status="true"} == 1) == 1
             for: 2m
             labels:
               severity: warning
@@ -181,23 +181,23 @@ configMap:
                 VALUE: {{ $value }}
 
 
-          - alert: K8S-HPA đủ tài nguyên
-            expr: max(
-                    quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
-                    == kube_horizontalpodautoscaler_spec_min_replicas
-                  ) by (horizontalpodautoscaler) > 3
-            for: 5m
-            labels:
-              severity: info
-            annotations:
-              summary: "ℹ️ HPA sử dụng thấp – có thể dư tài nguyên"
-              description: >
-                HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã hoạt động ở mức tối thiểu (`minReplicas`) trong **ít nhất 50% thời gian của 1 ngày qua**.
+          # - alert: K8S-HPA đủ tài nguyên
+          #   expr: max(
+          #           quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas[1d])
+          #           == kube_horizontalpodautoscaler_spec_min_replicas
+          #         ) by (horizontalpodautoscaler) > 3
+          #   for: 5m
+          #   labels:
+          #     severity: info
+          #   annotations:
+          #     summary: "ℹ️ HPA sử dụng thấp – có thể dư tài nguyên"
+          #     description: >
+          #       HorizontalPodAutoscaler `{{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }}` đã hoạt động ở mức tối thiểu (`minReplicas`) trong **ít nhất 50% thời gian của 1 ngày qua**.
 
-                👉 Điều này có thể cho thấy ứng dụng đang được phân bổ tài nguyên dư thừa. Cân nhắc giảm số lượng replica hoặc tiết kiệm chi phí.
+          #       👉 Điều này có thể cho thấy ứng dụng đang được phân bổ tài nguyên dư thừa. Cân nhắc giảm số lượng replica hoặc tiết kiệm chi phí.
 
-                📊 Giá trị: {{ $value }}
-                🏷️ Nhãn: {{ $labels }}
+          #       📊 Giá trị: {{ $value }}
+          #       🏷️ Nhãn: {{ $labels }}
 
           - alert: K8S-LỖI POD
             expr: sum by (namespace, pod, job) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
@@ -214,7 +214,7 @@ configMap:
 
           - alert: K8S-RAM máy chủ hết
             expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.05
-            for: 2m
+            for: 5m
             labels:
               severity: critical
             annotations:
@@ -300,7 +300,7 @@ configMap:
 
           - alert: K8S-Máy chủ sắp hết dung lượng
             expr: (node_filesystem_avail_bytes{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"} / node_filesystem_size_bytes < 0.10 and on (instance, device, mountpoint) node_filesystem_readonly == 0)
-            for: 2m
+            for: 5m
             labels:
               severity: critical
             annotations:
@@ -312,7 +312,7 @@ configMap:
 
           - alert: K8S-Máy chủ sắp cạn Inode
             expr: (node_filesystem_files_free / node_filesystem_files < 0.10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0)
-            for: 2m
+            for: 5m
             labels:
               severity: critical
             annotations:
@@ -324,7 +324,7 @@ configMap:
 
           - alert: K8S-Dự Đoán Inode Trong 24h
             expr: predict_linear(node_filesystem_files_free{fstype!~"^(fuse.*|tmpfs|cifs|nfs)"}[1h], 86400) <= 0 and node_filesystem_files_free > 0
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -336,7 +336,7 @@ configMap:
 
           - alert: K8S-Độ trễ đọc đĩa bất thường
             expr: (rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 0.1 and rate(node_disk_reads_completed_total[1m]) > 0)
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -348,7 +348,7 @@ configMap:
 
           - alert: K8S-Độ Trễ Ghi Đĩa Bất Thường
             expr: (rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0)
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -418,23 +418,9 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          # - alert: Lượt chuyển ngữ cảnh cao bất thường
-          #   expr: (rate(node_context_switches_total[15m]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"}))
-          #         /
-          #         (rate(node_context_switches_total[1d]) / count without(mode, cpu) (node_cpu_seconds_total{mode="idle"})) > 2
-          #   for: 5m
-          #   labels:
-          #     severity: warning
-          #   annotations:
-          #     summary: "Máy chủ {{ $labels.instance }} có số lần chuyển ngữ cảnh tăng cao bất thường"
-          #     description: >
-          #       Số lần chuyển ngữ cảnh (context switching) trên máy chủ {{ $labels.instance }} trong 15 phút gần nhất đang cao gấp đôi trung bình 1 ngày. Điều này có thể là dấu hiệu cho thấy hệ thống đang xử lý quá nhiều tiến trình nhỏ hoặc có vấn đề về lịch trình CPU.
-          #       ▸ Giá trị hiện tại: {{ $value }}
-          #       ▸ Thông tin nhãn: {{ $labels }}
-
           - alert: K8S-Swap Đang cao
             expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80)
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -444,34 +430,34 @@ configMap:
                 ▸ Giá trị hiện tại: {{ $value }}%
                 ▸ Thông tin nhãn: {{ $labels }}
 
-          # - alert: Dịch vụ systemd bị lỗi
-          #   expr: node_systemd_unit_state{state="failed"} == 1
-          #   for: 5m
-          #   labels:
-          #     severity: warning
-          #   annotations:
-          #     summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
-          #     description: >
-          #       Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
-          #       ▸ Giá trị hiện tại: {{ $value }}
-          #       ▸ Thông tin nhãn: {{ $labels }}
+          - alert: K8S-Dịch vụ systemd bị lỗi
+            expr: node_systemd_unit_state{state="failed"} == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Một dịch vụ systemd trên máy chủ {{ $labels.instance }} đã bị lỗi"
+              description: >
+                Phát hiện một dịch vụ systemd đang ở trạng thái `failed` trên máy chủ {{ $labels.instance }}. Vui lòng kiểm tra ngay để khôi phục dịch vụ nếu cần thiết.
+                ▸ Giá trị hiện tại: {{ $value }}
+                ▸ Thông tin nhãn: {{ $labels }}
 
-          # - alert: Thay Đổi Phiên Bản kernel
-          #   expr: changes(node_uname_info[1h]) > 0
-          #   for: 5m
-          #   labels:
-          #     severity: info
-          #   annotations:
-          #     summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
-          #     description: >
-          #       Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
-          #       ▸ Giá trị hiện tại: {{ $value }}
-          #       ▸ Thông tin nhãn: {{ $labels }}
+          - alert: K8S-Thay Đổi Phiên Bản kernel
+            expr: changes(node_uname_info[1h]) > 0
+            for: 5m
+            labels:
+              severity: info
+            annotations:
+              summary: "Máy chủ {{ $labels.instance }} có sự thay đổi phiên bản kernel"
+              description: >
+                Máy chủ {{ $labels.instance }} đã thay đổi phiên bản kernel trong vòng 1 giờ qua. Điều này có thể do cập nhật hệ thống, khởi động lại, hoặc sự cố khẩn cấp.
+                ▸ Giá trị hiện tại: {{ $value }}
+                ▸ Thông tin nhãn: {{ $labels }}
 
 
           - alert: K8S-Đồng bộ thời gian không hoạt động
             expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16)
-            for: 2m
+            for: 5m
             labels:
               severity: warning
             annotations:
@@ -483,7 +469,7 @@ configMap:
 
           - alert: K8S-STATUS SERVER
             expr: up{job='kubernetes-nodes'} == 0
-            for: 2m
+            for: 5m
             labels:
               severity: critical
             annotations:
